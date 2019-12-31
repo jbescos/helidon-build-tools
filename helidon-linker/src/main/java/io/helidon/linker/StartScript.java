@@ -33,10 +33,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
-import io.helidon.linker.util.FileUtils;
-import io.helidon.linker.util.Log;
-import io.helidon.linker.util.ProcessMonitor;
-import io.helidon.linker.util.StreamUtils;
+import io.helidon.linker.util.*;
 
 import static io.helidon.linker.util.Constants.CDS_REQUIRES_UNLOCK_OPTION;
 import static io.helidon.linker.util.Constants.CDS_SUPPORTS_IMAGE_COPY;
@@ -53,7 +50,7 @@ import static java.util.Objects.requireNonNull;
  * Installs a start script for a main jar.
  */
 public class StartScript {
-    private static final String INSTALL_PATH = "start";
+    private static final String INSTALL_PATH = Constants.OS_TYPE.withScriptExtension("start");
     private final Path installDirectory;
     private final Path scriptFile;
     private final String script;
@@ -90,15 +87,17 @@ public class StartScript {
     Path install() {
         try {
             Files.copy(new ByteArrayInputStream(script.getBytes(StandardCharsets.UTF_8)), scriptFile);
-            Files.setPosixFilePermissions(scriptFile, Set.of(
-                PosixFilePermission.OWNER_READ,
-                PosixFilePermission.OWNER_WRITE,
-                PosixFilePermission.OWNER_EXECUTE,
-                PosixFilePermission.GROUP_READ,
-                PosixFilePermission.GROUP_EXECUTE,
-                PosixFilePermission.OTHERS_READ,
-                PosixFilePermission.OTHERS_EXECUTE
-            ));
+            if (OS_TYPE.isPosix()) {
+                Files.setPosixFilePermissions(scriptFile, Set.of(
+                        PosixFilePermission.OWNER_READ,
+                        PosixFilePermission.OWNER_WRITE,
+                        PosixFilePermission.OWNER_EXECUTE,
+                        PosixFilePermission.GROUP_READ,
+                        PosixFilePermission.GROUP_EXECUTE,
+                        PosixFilePermission.OTHERS_READ,
+                        PosixFilePermission.OTHERS_EXECUTE
+                ));
+            }
             return scriptFile;
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -116,8 +115,12 @@ public class StartScript {
         final ProcessBuilder processBuilder = new ProcessBuilder();
         final List<String> command = new ArrayList<>();
         final Path root = requireNonNull(requireNonNull(scriptFile.getParent()).getParent());
+        if (Constants.OS_TYPE.getScriptExecutor() != null) {
+            command.add(Constants.OS_TYPE.getScriptExecutor());
+        }
         command.add(scriptFile.toString());
         command.addAll(Arrays.asList(args));
+        Log.debug("Commands: %s", command.toString());
         processBuilder.command(command);
         processBuilder.directory(root.toFile());
         try {
@@ -581,7 +584,7 @@ public class StartScript {
         private Template template() {
             if (template == null) {
                 if (OS_TYPE.equals(Windows)) {
-                    throw new PlatformNotSupportedError(config.toCommand());
+                    return new PowerShellStartScriptTemplate();
                 } else {
                     return new BashStartScriptTemplate();
                 }

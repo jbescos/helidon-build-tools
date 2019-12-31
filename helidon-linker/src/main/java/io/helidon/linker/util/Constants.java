@@ -35,19 +35,68 @@ public final class Constants {
         /**
          * Macintosh.
          */
-        MacOS,
+        MacOS("java", true, null),
         /**
          * Windows.
          */
-        Windows,
+        Windows("java.exe", false, "powershell.exe"){
+            @Override
+            public String withScriptExtension(String scriptName){
+                return scriptName + ".ps1";
+            }
+        }
+        ,
         /**
          * Linux.
          */
-        Linux,
+        Linux("java", true, null),
         /**
          * Unknon.
          */
-        Unknown
+        Unknown("java", true, null);
+
+        private final String javaExecutable;
+        private final boolean posix;
+        private final String scriptExecutor;
+
+        private OSType(String javaExecutable, boolean posix, String scriptExecutor){
+            this.javaExecutable = javaExecutable;
+            this.posix = posix;
+            this.scriptExecutor = scriptExecutor;
+        }
+
+        /**
+         * Default java executable
+         * @return java executable name
+         */
+        public String javaExecutable(){
+            return javaExecutable;
+        }
+
+        /**
+         * Returns the scriptName with the SO related extension.
+         * @param scriptName The script file name without file extension
+         * @return The scriptName with SO extension
+         */
+        public String withScriptExtension(String scriptName){
+            return scriptName;
+        }
+
+        /**
+         * To check that OSType supports posix.
+         * @return true when OSType supports posix or false if not.
+         */
+        public boolean isPosix(){
+            return posix;
+        }
+
+        /**
+         * In some OSType is necessary to specify the program to execute the script.
+         * @return the program name to execute the script or null when it is not necessary.
+         */
+        public String getScriptExecutor(){
+            return scriptExecutor;
+        }
     }
 
     /**

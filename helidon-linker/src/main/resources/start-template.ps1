@@ -1,0 +1,162 @@
+#
+# Copyright (c) 2019 Oracle and/or its affiliates. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# Before you execute the script you need to grant system permissions as admin running the next command
+# powershell Set-ExecutionPolicy RemoteSigned
+param([parameter(ValueFromRemainingArguments=$true)]
+    [string[]]$arguments)
+$global:action="Invoke-Expression"
+$global:command=$null
+
+function usage {
+    Write-Host
+    Write-Host "Start <JAR_NAME> from this runtime image."
+    Write-Host
+    Write-Host "Usage: ${scriptName} <options> [arg]..."
+    Write-Host
+    Write-Host "Options:"
+    Write-Host
+    Write-Host "    --jvm <option>  Add one or more JVM options, replacing defaults."
+    Write-Host "    --noCds         Do not use CDS."
+    Write-Host "    --debug         Add JVM debug options."
+    Write-Host "    --test          Exit when started."
+    Write-Host "    --dryRun        Display the command rather than executing it."
+    Write-Host "    --help          Display usage."
+    Write-Host
+    Write-Host "Unrecognized options are passed as arguments to <JAR_NAME>, replacing defaults."
+    Write-Host
+    Write-Host "Supported environment variables:"
+    Write-Host
+    Write-Host "    DEFAULT_APP_JVM     <DEFAULT_APP_JVM_DESC>"
+    Write-Host "    DEFAULT_APP_ARGS    <DEFAULT_APP_ARGS_DESC>"
+    Write-Host "    DEFAULT_APP_DEBUG   <DEFAULT_APP_DEBUG_DESC>"
+    Write-Host
+    exit 0
+}
+
+function init {
+    param ( [String]$script )
+    $scriptName = (Get-Item $script).Basename
+    $binDir = (Get-Item $script).DirectoryName
+    $homeDir=(Get-Item $binDir).parent.FullName
+    $jarName="<JAR_NAME>"
+    $defaultDebug="<DEFAULT_APP_DEBUG>"
+    $defaultJvm="<DEFAULT_APP_JVM>"
+    $defaultArgs="<DEFAULT_APP_ARGS>"
+    $cdsOption="<CDS_UNLOCK>-XX:SharedArchiveFile=lib\start.jsa -Xshare:"
+    $exitOption="`"-Dexit.on.started=<EXIT_ON_STARTED>`""
+    $debugDefaults
+    if (-not (Test-Path env:DEFAULT_APP_JVM)) {
+        $debugDefaults=$defaultDebug
+    } else {
+        $debugDefaults=$env:DEFAULT_APP_JVM
+    }
+    $jvmDefaults
+    if (-not (Test-Path env:DEFAULT_APP_JVM)) {
+        $jvmDefaults=$defaultJvm
+    } else {
+        $jvmDefaults=$env:DEFAULT_APP_JVM
+    }
+    $argDefaults
+    if (-not (Test-Path env:DEFAULT_APP_ARGS)) {
+        $argDefaults=$defaultArgs
+    } else {
+        $argDefaults=$env:DEFAULT_APP_ARGS
+    }
+    $args
+    $jvm
+    $test=$false
+    $share="auto"
+    $useCds=$true
+    $debug=$false
+    $i=0
+    while ($i -lt $arguments.Length) {
+        switch ($($arguments[$i])) {
+           "--jvm"  {$jvm = appendVar $jvm $($arguments[++$i]); break}
+           "--noCds"   {$useCds=$false; break}
+           "--debug" {$debug=$true; break}
+           "--test"  {$test=$true; $share="on"; break}
+           "--dryRun" {$global:action="Write-Host"; break}
+           "-h" {usage; break}
+           "--help" {usage; break}
+           default {$args = appendVar $args $($arguments[$i]); break}
+        }
+        $i++
+    }
+    $jvmOptions
+    if (-not (Test-Path jvm)) {
+        $jvmOptions = $jvmDefaults
+    } else {
+        $jvmOptions = $jvm
+    }
+    if ($useCds) {
+        $jvmOptions = appendVar "$jvmOptions" "${cdsOption}${share}"
+    }
+    if ($debug) {
+        $jvmOptions = appendVar "$jvmOptions" "$debugDefaults"
+    }
+    if ($test) {
+        $jvmOptions = appendVar "$jvmOptions" "$exitOption"
+        if ($useCds) {
+            checkTimeStamps
+        }
+    }
+    $commandArgs
+    if (-not (Test-Path args)) {
+        $commandArgs = $argDefaults
+    } else {
+        $commandArgs = $args
+    }
+    $global:command="bin\java.exe $jvmOptions -jar app\$jarName $commandArgs"
+    Set-Location -Path "$homeDir"
+}
+
+function appendVar {
+    param ( [String]$var,
+            [String]$value)
+    return $("$var $value")
+}
+
+function checkTimeStamps {
+    $modulesTimeStamp = getLastWriteTotalSeconds ${homeDir}/lib/modules
+    $jarTimeStamp = getLastWriteTotalSeconds ${homeDir}/app/$jarName
+    if ( ($modulesTimeStamp -ne "<MODULES_TIME_STAMP>") -Or ($jarTimeStamp -ne "<JAR_TIME_STAMP>") ) {
+        Write-Host "WARNING: CDS will likely fail since it appears this image is a copy (timestamps differ)."
+        Write-Host "         <COPY_INSTRUCTIONS>"
+    }
+}
+
+function getLastWriteTotalSeconds {
+    param ( [String]$file)
+    $timeStampFormat="<STAT_FORMAT>"
+    $seconds = (Get-Date -Date ((Get-ItemProperty -Path $file -Name LastWriteTime).lastwritetime) -UFormat $timeStampFormat).split('.')[0].split(',')[0]
+    # There is one hour gap in epoch when comparing with Java timestamp
+    return ($seconds - 3600)
+}
+
+function main {
+    $script = $PSCommandPath
+    Write-Host "Script: $script"
+    for ($i = 0; $i -lt $arguments.Length; ++$i) {
+        Write-Host "arg[$i] = $($arguments[$i])"
+    }
+    init $script
+    Write-Host "$global:action $global:command"
+    & "$global:action" "$global:command"
+}
+
+main
+

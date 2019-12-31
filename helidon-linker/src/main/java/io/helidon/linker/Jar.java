@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.lang.module.ModuleDescriptor;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
@@ -46,6 +47,8 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import java.util.zip.ZipEntry;
 
+import io.helidon.linker.util.Constants;
+import io.helidon.linker.util.JavaRuntime;
 import io.helidon.linker.util.Log;
 import io.helidon.linker.util.StreamUtils;
 
@@ -324,15 +327,17 @@ public final class Jar implements ResourceContainer {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-        try {
-            Files.setPosixFilePermissions(targetFile, Set.of(
-                PosixFilePermission.OWNER_READ,
-                PosixFilePermission.OWNER_WRITE,
-                PosixFilePermission.GROUP_READ,
-                PosixFilePermission.OTHERS_READ
-            ));
-        } catch (IOException e) {
-            Log.warn("Unable to set %s read-only: %s", e.getMessage());
+        if (Constants.OS_TYPE.isPosix()) {
+            try {
+                Files.setPosixFilePermissions(targetFile, Set.of(
+                        PosixFilePermission.OWNER_READ,
+                        PosixFilePermission.OWNER_WRITE,
+                        PosixFilePermission.GROUP_READ,
+                        PosixFilePermission.OTHERS_READ
+                ));
+            } catch (IOException e) {
+                Log.warn("Unable to set %s read-only: %s", e.getMessage());
+            }
         }
         return targetFile;
     }
