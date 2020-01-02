@@ -59,23 +59,11 @@ function init {
     $cdsOption="<CDS_UNLOCK>-XX:SharedArchiveFile=lib\start.jsa -Xshare:"
     $exitOption="`"-Dexit.on.started=<EXIT_ON_STARTED>`""
     $debugDefaults
-    if (-not (Test-Path env:DEFAULT_APP_JVM)) {
-        $debugDefaults=$defaultDebug
-    } else {
-        $debugDefaults=$env:DEFAULT_APP_JVM
-    }
+    if (Test-Path env:DEFAULT_APP_JVM) { $debugDefaults=$env:DEFAULT_APP_JVM } else { $debugDefaults=$defaultDebug }
     $jvmDefaults
-    if (-not (Test-Path env:DEFAULT_APP_JVM)) {
-        $jvmDefaults=$defaultJvm
-    } else {
-        $jvmDefaults=$env:DEFAULT_APP_JVM
-    }
+    if (Test-Path env:DEFAULT_APP_JVM) { $jvmDefaults=$env:DEFAULT_APP_JVM } else { $jvmDefaults=$defaultJvm }
     $argDefaults
-    if (-not (Test-Path env:DEFAULT_APP_ARGS)) {
-        $argDefaults=$defaultArgs
-    } else {
-        $argDefaults=$env:DEFAULT_APP_ARGS
-    }
+    if (Test-Path env:DEFAULT_APP_ARGS) { $argDefaults=$env:DEFAULT_APP_ARGS } else { $argDefaults=$defaultArgs }
     $args
     $jvm
     $test=$false
@@ -97,17 +85,9 @@ function init {
         $i++
     }
     $jvmOptions
-    if (-not (Test-Path jvm)) {
-        $jvmOptions = $jvmDefaults
-    } else {
-        $jvmOptions = $jvm
-    }
-    if ($useCds) {
-        $jvmOptions = appendVar "$jvmOptions" "${cdsOption}${share}"
-    }
-    if ($debug) {
-        $jvmOptions = appendVar "$jvmOptions" "$debugDefaults"
-    }
+    if ($jvm) { $jvmOptions = $jvm } else { $jvmOptions = $jvmDefaults }
+    if ($useCds) { $jvmOptions = appendVar "$jvmOptions" "${cdsOption}${share}" }
+    if ($debug) { $jvmOptions = appendVar "$jvmOptions" "$debugDefaults" }
     if ($test) {
         $jvmOptions = appendVar "$jvmOptions" "$exitOption"
         if ($useCds) {
@@ -115,11 +95,7 @@ function init {
         }
     }
     $commandArgs
-    if (-not (Test-Path args)) {
-        $commandArgs = $argDefaults
-    } else {
-        $commandArgs = $args
-    }
+    if ($args) { $commandArgs = $args } else { $commandArgs = $argDefaults }
     $global:command="bin\java.exe $jvmOptions -jar app\$jarName $commandArgs"
     Set-Location -Path "$homeDir"
 }
@@ -149,12 +125,9 @@ function getLastWriteTotalSeconds {
 
 function main {
     $script = $PSCommandPath
-    Write-Host "Script: $script"
-    for ($i = 0; $i -lt $arguments.Length; ++$i) {
-        Write-Host "arg[$i] = $($arguments[$i])"
-    }
+    #Write-Host "Script: $script"
     init $script
-    Write-Host "$global:action $global:command"
+    #Write-Host "$global:action $global:command"
     & "$global:action" "$global:command"
 }
 
