@@ -16,13 +16,11 @@
 
 package io.helidon.linker;
 
-import io.helidon.linker.StartScript.TemplateConfig;
-
 import java.util.List;
 
+import io.helidon.linker.StartScript.TemplateConfig;
+
 import static io.helidon.linker.util.Constants.CDS_UNLOCK_OPTIONS;
-import static io.helidon.linker.util.Constants.OSType.MacOS;
-import static io.helidon.linker.util.Constants.OS_TYPE;
 import static io.helidon.linker.util.FileUtils.fileName;
 import static java.util.Collections.emptyList;
 

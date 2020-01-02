@@ -24,7 +24,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.lang.module.ModuleDescriptor;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
@@ -48,7 +47,6 @@ import java.util.stream.StreamSupport;
 import java.util.zip.ZipEntry;
 
 import io.helidon.linker.util.Constants;
-import io.helidon.linker.util.JavaRuntime;
 import io.helidon.linker.util.Log;
 import io.helidon.linker.util.StreamUtils;
 
