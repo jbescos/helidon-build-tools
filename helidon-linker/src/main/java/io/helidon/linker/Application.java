@@ -62,9 +62,7 @@ public final class Application implements ResourceContainer {
         this.mainJar = Jar.open(mainJar);
         this.classPath = collectClassPath();
         this.isMicroprofile = classPath.stream().anyMatch(jar -> jar.name().startsWith(MP_FILE_PREFIX));
-//        this.version = extractHelidonVersion();
-        // FIXME remove next line
-        this.version = Runtime.Version.parse("2");
+        this.version = extractHelidonVersion();
     }
 
     /**

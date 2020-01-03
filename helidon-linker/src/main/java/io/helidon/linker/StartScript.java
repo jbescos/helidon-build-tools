@@ -44,7 +44,7 @@ import static io.helidon.linker.util.Constants.CDS_SUPPORTS_IMAGE_COPY;
 import static io.helidon.linker.util.Constants.CDS_UNLOCK_OPTIONS;
 import static io.helidon.linker.util.Constants.DIR_SEP;
 import static io.helidon.linker.util.Constants.EOL;
-import static io.helidon.linker.util.Constants.OSType.Windows;
+import static io.helidon.linker.util.Constants.OSType.Unknown;
 import static io.helidon.linker.util.Constants.OS_TYPE;
 import static io.helidon.linker.util.FileUtils.assertDir;
 import static java.util.Collections.emptyList;
@@ -587,10 +587,10 @@ public class StartScript {
 
         private Template template() {
             if (template == null) {
-                if (OS_TYPE.equals(Windows)) {
-                    return new PowerShellStartScriptTemplate();
+                if (OS_TYPE == Unknown) {
+                    throw new PlatformNotSupportedError(config.toCommand());
                 } else {
-                    return new BashStartScriptTemplate();
+                    return new StartScriptTemplate();
                 }
             } else {
                 return template;
