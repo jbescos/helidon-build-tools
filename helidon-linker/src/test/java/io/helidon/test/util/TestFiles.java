@@ -17,6 +17,7 @@
 package io.helidon.test.util;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -149,8 +150,12 @@ public class TestFiles {
     }
 
     private static Path ourTargetDir() {
-        final Path ourCodeSource = Paths.get(TestFiles.class.getProtectionDomain().getCodeSource().getLocation().getPath());
-        return ourCodeSource.getParent();
+        try {
+            final Path ourCodeSource = Paths.get(TestFiles.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+            return ourCodeSource.getParent();
+        } catch (URISyntaxException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private static Path getOrCreateQuickstartSeJar() {

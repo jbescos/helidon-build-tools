@@ -21,7 +21,8 @@ import java.util.List;
 import io.helidon.linker.StartScript.TemplateConfig;
 
 import static io.helidon.linker.util.Constants.CDS_UNLOCK_OPTIONS;
-import static io.helidon.linker.util.Constants.OSType.*;
+import static io.helidon.linker.util.Constants.OSType.MacOS;
+import static io.helidon.linker.util.Constants.OSType.Windows;
 import static io.helidon.linker.util.Constants.OS_TYPE;
 import static io.helidon.linker.util.FileUtils.fileName;
 import static java.util.Collections.emptyList;
@@ -97,7 +98,7 @@ public class StartScriptTemplate extends StartScript.SimpleTemplate {
         final String cdsUnlock = config.cdsRequiresUnlock() ? CDS_UNLOCK_OPTIONS + " " : "";
 
         String statFormat;
-        if( OS_TYPE == MacOS ) {
+        if (OS_TYPE == MacOS) {
             statFormat = STAT_FORMAT_MAC;
         } else if (OS_TYPE == Windows) {
             statFormat = STAT_FORMAT_WINDOWS;
