@@ -35,11 +35,11 @@ public final class Constants {
         /**
          * Macintosh.
          */
-        MacOS("java", true, null),
+        MacOS("java", true, null, "-f %m", "mvn"),
         /**
          * Windows.
          */
-        Windows("java.exe", false, "powershell.exe") {
+        Windows("java.exe", false, "powershell.exe", "%s", "mvn.cmd") {
             @Override
             public String withScriptExtension(String scriptName){
                 return scriptName + ".ps1";
@@ -48,20 +48,24 @@ public final class Constants {
         /**
          * Linux.
          */
-        Linux("java", true, null),
+        Linux("java", true, null, "-c %Y", "mvn"),
         /**
-         * Unknon.
+         * Unknown.
          */
-        Unknown("java", true, null);
+        Unknown("java", true, null, null, "mvn");
 
         private final String javaExecutable;
         private final boolean posix;
         private final String scriptExecutor;
+        private final String statFormat;
+        private final String mavenExec;
 
-        OSType(String javaExecutable, boolean posix, String scriptExecutor) {
+        OSType(String javaExecutable, boolean posix, String scriptExecutor, String statFormat, String mavenExec) {
             this.javaExecutable = javaExecutable;
             this.posix = posix;
             this.scriptExecutor = scriptExecutor;
+            this.statFormat = statFormat;
+            this.mavenExec = mavenExec;
         }
 
         /**
@@ -93,8 +97,24 @@ public final class Constants {
          * In some OSType is necessary to specify the program to execute the script.
          * @return the program name to execute the script or null when it is not necessary.
          */
-        public String getScriptExecutor() {
+        public String scriptExecutor() {
             return scriptExecutor;
+        }
+
+        /**
+         * Returns the stat format that depends on SO.
+         * @return the stat format
+         */
+        public String statFormat() {
+            return statFormat;
+        }
+
+        /**
+         * Returns the maven execution file name.
+         * @return the maven exec
+         */
+        public String mavenExec() {
+            return mavenExec;
         }
     }
 

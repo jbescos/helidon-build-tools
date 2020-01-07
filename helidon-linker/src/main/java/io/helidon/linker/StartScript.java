@@ -119,8 +119,8 @@ public class StartScript {
         final ProcessBuilder processBuilder = new ProcessBuilder();
         final List<String> command = new ArrayList<>();
         final Path root = requireNonNull(requireNonNull(scriptFile.getParent()).getParent());
-        if (Constants.OS_TYPE.getScriptExecutor() != null) {
-            command.add(Constants.OS_TYPE.getScriptExecutor());
+        if (Constants.OS_TYPE.scriptExecutor() != null) {
+            command.add(Constants.OS_TYPE.scriptExecutor());
         }
         command.add(scriptFile.toString());
         command.addAll(Arrays.asList(args));

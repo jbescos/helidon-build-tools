@@ -21,7 +21,6 @@ import java.util.List;
 import io.helidon.linker.StartScript.TemplateConfig;
 
 import static io.helidon.linker.util.Constants.CDS_UNLOCK_OPTIONS;
-import static io.helidon.linker.util.Constants.OSType.MacOS;
 import static io.helidon.linker.util.Constants.OSType.Windows;
 import static io.helidon.linker.util.Constants.OS_TYPE;
 import static io.helidon.linker.util.FileUtils.fileName;
@@ -44,9 +43,6 @@ public class StartScriptTemplate extends StartScript.SimpleTemplate {
     private static final String DEFAULT_DEBUG_DESC_VAR = "<DEFAULT_APP_DEBUG_DESC>";
     private static final String EXIT_ON_STARTED_VAR = "<EXIT_ON_STARTED>";
     private static final String STAT_FORMAT_VAR = "<STAT_FORMAT>";
-    private static final String STAT_FORMAT_MAC = "-f %m";
-    private static final String STAT_FORMAT_LINUX = "-c %Y";
-    private static final String STAT_FORMAT_WINDOWS = "%s";
     private static final String MODULES_TIME_STAMP_VAR = "<MODULES_TIME_STAMP>";
     private static final String JAR_TIME_STAMP_VAR = "<JAR_TIME_STAMP>";
     private static final String MODULES_FILE = "lib/modules";
@@ -97,14 +93,8 @@ public class StartScriptTemplate extends StartScript.SimpleTemplate {
         final String hasDebug = config.debugInstalled() ? "yes" : "";
         final String cdsUnlock = config.cdsRequiresUnlock() ? CDS_UNLOCK_OPTIONS + " " : "";
 
-        String statFormat;
-        if (OS_TYPE == MacOS) {
-            statFormat = STAT_FORMAT_MAC;
-        } else if (OS_TYPE == Windows) {
-            statFormat = STAT_FORMAT_WINDOWS;
-        } else {
-            statFormat = STAT_FORMAT_LINUX;
-        }
+        final String statFormat = OS_TYPE.statFormat();
+
         final String modulesModTime = lastModifiedTime(config.installHomeDirectory().resolve(MODULES_FILE));
         final String jarModTime = lastModifiedTime(config.mainJar());
         final String copyInstructions = config.cdsSupportsImageCopy() ? COPY_SUPPORTED : COPY_NOT_SUPPORTED;
