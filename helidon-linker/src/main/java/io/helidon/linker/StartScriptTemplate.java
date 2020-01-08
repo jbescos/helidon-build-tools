@@ -47,8 +47,7 @@ public class StartScriptTemplate extends StartScript.SimpleTemplate {
     private static final String JAR_TIME_STAMP_VAR = "<JAR_TIME_STAMP>";
     private static final String MODULES_FILE = "lib/modules";
     private static final String OVERRIDES = "Overrides \\\"${default%s}\\\".";
-    private static final String CHECK_TIME_STAMPS = "checkTimeStamps()";
-    private static final String CDS_WARNING = "WARNING: CDS";
+    private static final String CHECK_TIME_STAMPS = OS_TYPE == Windows ? "function checkTimeStamps" : "checkTimeStamps()";
     private static final String SETS = "Sets default %s.";
     private static final String CDS = "cds";
     private static final String DEBUG = "debug";
@@ -128,9 +127,8 @@ public class StartScriptTemplate extends StartScript.SimpleTemplate {
 
     private void removeCheckTimeStampFunction() {
         final int startIndex = indexOf(0, CHECK_TIME_STAMPS, false);
-        final int warningIndex = indexOf(startIndex + 1, CDS_WARNING, false);
-        final int closingBraceIndex = indexOf(warningIndex + 1, "}", false) + 1;
-        removeLines((index, line) -> index >= startIndex && index <= closingBraceIndex);
+        final int endIndex = indexOfEquals(startIndex, "}") + 1;
+        removeLines((index, line) -> index >= startIndex && index <= endIndex);
     }
 
     private static boolean isComment(String line) {

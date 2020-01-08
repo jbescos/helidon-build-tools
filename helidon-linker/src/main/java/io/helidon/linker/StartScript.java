@@ -374,6 +374,17 @@ public class StartScript {
         }
 
         /**
+         * Returns the index of the first line that is equals to the given str.
+         * @param startIndex The start index.
+         * @param str The string.
+         * @return The index.
+         * @throws IllegalStateException if no matching line is found.
+         */
+        protected int indexOfEquals(int startIndex, String str) {
+            return indexOf(startIndex, (index, line) -> line.equals(str));
+        }
+
+        /**
          * Returns the index of the first line that matches the given predicate.
          *
          * @param startIndex The start index.

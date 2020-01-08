@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2019 Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2020 Oracle and/or its affiliates. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -58,12 +58,9 @@ function init {
     $defaultArgs="<DEFAULT_APP_ARGS>"
     $cdsOption="<CDS_UNLOCK>-XX:SharedArchiveFile=lib\start.jsa -Xshare:"
     $exitOption="`"-Dexit.on.started=<EXIT_ON_STARTED>`""
-    $debugDefaults
-    if (Test-Path env:DEFAULT_APP_JVM) { $debugDefaults=$env:DEFAULT_APP_JVM } else { $debugDefaults=$defaultDebug }
-    $jvmDefaults
-    if (Test-Path env:DEFAULT_APP_JVM) { $jvmDefaults=$env:DEFAULT_APP_JVM } else { $jvmDefaults=$defaultJvm }
-    $argDefaults
-    if (Test-Path env:DEFAULT_APP_ARGS) { $argDefaults=$env:DEFAULT_APP_ARGS } else { $argDefaults=$defaultArgs }
+    $debugDefaults = if (Test-Path env:DEFAULT_APP_DEBUG) { $env:DEFAULT_APP_DEBUG } else { $defaultDebug }
+    $jvmDefaults = if (Test-Path env:DEFAULT_APP_JVM) { $env:DEFAULT_APP_JVM } else { $defaultJvm }
+    $argDefaults = if (Test-Path env:DEFAULT_APP_ARGS) { $env:DEFAULT_APP_ARGS } else { $defaultArgs }
     $args
     $jvm
     $test=$false
@@ -84,18 +81,14 @@ function init {
         }
         $i++
     }
-    $jvmOptions
-    if ($jvm) { $jvmOptions = $jvm } else { $jvmOptions = $jvmDefaults }
-    if ($useCds) { $jvmOptions = appendVar "$jvmOptions" "${cdsOption}${share}" }
-    if ($debug) { $jvmOptions = appendVar "$jvmOptions" "$debugDefaults" }
-    if ($test) {
-        $jvmOptions = appendVar "$jvmOptions" "$exitOption"
-        if ($useCds) {
-            checkTimeStamps
-        }
+    $jvmOptions = if ($jvm) { $jvm } else { $jvmDefaults }
+    if (${useCds}) { $jvmOptions = appendVar "$jvmOptions" "${cdsOption}${share}" }
+    if (${debug}) { $jvmOptions = appendVar "$jvmOptions" "$debugDefaults" }
+    if ($test) { 
+    	$jvmOptions = appendVar "$jvmOptions" "$exitOption" 
+    	if ($useCds) { checkTimeStamps }
     }
-    $commandArgs
-    if ($args) { $commandArgs = $args } else { $commandArgs = $argDefaults }
+    $commandArgs = if ($args) { $args } else { $argDefaults }
     $global:command="bin\java.exe $jvmOptions -jar app\$jarName $commandArgs"
     Set-Location -Path "$homeDir"
 }
@@ -109,7 +102,7 @@ function appendVar {
 function checkTimeStamps {
     $modulesTimeStamp = getLastWriteTotalSeconds ${homeDir}/lib/modules
     $jarTimeStamp = getLastWriteTotalSeconds ${homeDir}/app/$jarName
-    if ( ($modulesTimeStamp -ne "<MODULES_TIME_STAMP>") -Or ($jarTimeStamp -ne "<JAR_TIME_STAMP>") ) {
+    if ( (${modulesTimeStamp} -ne "<MODULES_TIME_STAMP>") -Or (${jarTimeStamp} -ne "<JAR_TIME_STAMP>") ) {
         Write-Host "WARNING: CDS will likely fail since it appears this image is a copy (timestamps differ)."
         Write-Host "         <COPY_INSTRUCTIONS>"
     }
@@ -117,9 +110,9 @@ function checkTimeStamps {
 
 function getLastWriteTotalSeconds {
     param ( [String]$file)
-    $timeStampFormat="<STAT_FORMAT>"
-    $seconds = (Get-Date -Date ((Get-ItemProperty -Path $file -Name LastWriteTime).lastwritetime) -UFormat $timeStampFormat).split('.')[0].split(',')[0]
-    # There is one hour gap in epoch when comparing with Java timestamp
+    $statFormat="<STAT_FORMAT>"
+    $seconds = (Get-Date -Date ((Get-ItemProperty -Path $file -Name LastWriteTime).lastwritetime) -UFormat $statFormat).split('.')[0].split(',')[0]
+    # There is one hour gap in epoch when comparing with Java
     return ($seconds - 3600)
 }
 
